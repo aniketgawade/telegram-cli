@@ -2810,25 +2810,31 @@ void print_dialog_list_gw (struct tgl_state *TLSR, void *extra, int success, int
     int i;
     for (i = size - 1; i >= 0; i--) {
       tgl_peer_t *UC;
-      switch (tgl_get_peer_type (peers[i])) {
-        case TGL_PEER_USER:
-          UC = tgl_peer_get (TLS, peers[i]);
-          mprintf (ev, "User ");
-          print_user_name (ev, peers[i], UC);
-          mprintf (ev, ": %d unread\n", unread_count[i]);
-          break;
-        case TGL_PEER_CHAT:
-          UC = tgl_peer_get (TLS, peers[i]);
-          mprintf (ev, "Chat ");
-          print_chat_name (ev, peers[i], UC);
-          mprintf (ev, ": %d unread\n", unread_count[i]);
-          break;
-        case TGL_PEER_CHANNEL:
-          UC = tgl_peer_get (TLS, peers[i]);
-          mprintf (ev, "Channel ");
-          print_channel_name (ev, peers[i], UC);
-          mprintf (ev, ": %d unread\n", unread_count[i]);
-          break;
+      // modified to only show unread messages
+      if (unread_count[i] != 0) {
+	  switch (tgl_get_peer_type (peers[i])) {
+	    case TGL_PEER_USER:
+	      UC = tgl_peer_get (TLS, peers[i]);
+	      mprintf (ev, "User ");
+	      print_user_name (ev, peers[i], UC);
+	      mprintf (ev, ": %d unread\n", unread_count[i]);
+	      tgl_do_get_history (TLS, peers[i], 0, unread_count[i], offline_mode, print_msg_list_history_gw, ev);
+	      break;
+	    case TGL_PEER_CHAT:
+	      UC = tgl_peer_get (TLS, peers[i]);
+	      mprintf (ev, "Chat ");
+	      print_chat_name (ev, peers[i], UC);
+	      mprintf (ev, ": %d unread\n", unread_count[i]);
+	      tgl_do_get_history (TLS, peers[i], 0, unread_count[i], offline_mode, print_msg_list_history_gw, ev);
+	      break;
+	    case TGL_PEER_CHANNEL:
+	      UC = tgl_peer_get (TLS, peers[i]);
+	      mprintf (ev, "Channel ");
+	      print_channel_name (ev, peers[i], UC);
+	      mprintf (ev, ": %d unread\n", unread_count[i]);
+	      tgl_do_get_history (TLS, peers[i], 0, unread_count[i], offline_mode, print_msg_list_history_gw, ev);
+	      break;
+	  }
       }
     }
     mpop_color (ev);
@@ -3371,6 +3377,8 @@ void user_status_upd (struct tgl_state *TLS, struct tgl_user *U) {
   mprint_start (ev);
   if (!enable_json)
   {
+    /*
+     * commented to stop showing online offline mgs
     mpush_color (ev, COLOR_YELLOW);
     mprintf (ev, "User ");
     print_user_name(ev, U->id, (void *) U);
@@ -3378,6 +3386,7 @@ void user_status_upd (struct tgl_state *TLS, struct tgl_user *U) {
     print_user_status(&U->status, ev);
     mprintf (ev, "\n");
     mpop_color (ev);
+    */
   } else {
     #ifdef USE_JSON
       json_t *res = json_pack_user_status(U);
